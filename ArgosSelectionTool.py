@@ -95,9 +95,10 @@ for lineString in line_list[1:]:
     # Assign variables to specific items in the list
     event_id = line_data [0]     # Argos tracking event ID ("event-id")
     timestamp = line_data [2]    # Observation date ("timestamp")
+    lc = line_data [14]          # Observation location class ("argos:lc")
+    if not lc in ('"1"', '"2"', '"3"'): continue
     lat = float(line_data [4])   # Observation latitude ("location-lat")
     lon = float(line_data [3])   # Observation longitude ("location-lon")
-    lc = line_data [14]          # Observation location class ("argos:lc")
     tag_id = line_data [-3]      # Tab identifier ("tag-local-identifier")
 
 # Evaluate latitude and longitude conditions
@@ -107,6 +108,43 @@ for lineString in line_list[1:]:
    # Report the status of the points
     if lat_condition & lon_condition:
         print(f'Record {event_id}: {tag_id} was IN the box at {timestamp}')
+    #else:
+        #print(f'Record {event_id}: {tag_id} was NOT IN the box at {timestamp}')
+
+# ——————————————————————————————————————————————————————————————————
+# VERSION 4: Process all lines in the Argos file using a WHILE loop
+# ——————————————————————————————————————————————————————————————————
+# Read the contents of the file into a list of lines
+f = open(file_name, 'r')
+# Only read one line at a time for WHILE loop
+lineString = f.readline()
+
+# Iterate through lines
+while lineString != "":
+    # Move to the next line
+    line_data = lineString.split(',')
+    
+    # Assign variables to specific items in the list
+    event_id = line_data [0]     # Argos tracking event ID ("event-id")
+    timestamp = line_data [2]    # Observation date ("timestamp")
+    lc = line_data [14]          # Observation location class ("argos:lc")
+    if not lc in ('"1"', '"2"', '"3"'): continue
+    lat = float(line_data [4])   # Observation latitude ("location-lat")
+    lon = float(line_data [3])   # Observation longitude ("location-lon")
+    tag_id = line_data [-3]      # Tab identifier ("tag-local-identifier")
+    
+    # Evaluate latitude and longitude conditions
+    lat_condition = the_box['y_min'] < lat < the_box['y_max']
+    lon_condition = the_box['x_min'] < lon < the_box['x_max']
+    
+    # Report the status of the points
+    if lat_condition & lon_condition:
+        print(f'Record {event_id}: {tag_id} was IN the box at {timestamp}')
     else:
         print(f'Record {event_id}: {tag_id} was NOT IN the box at {timestamp}')
- 
+
+    # Update the string
+    lineString = f.readline()
+
+# Close the file
+f.close()
